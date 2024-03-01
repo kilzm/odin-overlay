@@ -7,4 +7,4 @@ To view the available packages:
 nix flake show github:kilzm/odin-overlay
 ```
 
-Odin is built with the latest compatible version of LLVM.
+Odin is built with the latest compatible version of LLVM. There are also variants which reenable the SROA pass, that was removed for the official releases.

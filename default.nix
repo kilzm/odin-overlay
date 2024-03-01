@@ -29,10 +29,6 @@ let
       hash = "sha256-5plcr+j9aFSaLfLQXbG4WD1GH6rE7D3uhlUbPaDEYf8=";
       llvmPackages = prev.llvmPackages_17;
     };
-    dev-2023-10 = {
-      hash = "sha256-ZKxTkqPjbr/xw1HJ8jWrN4R1i9tKrZT9AGWFHIhpC1E=";
-      llvmPackages = prev.llvmPackages_14;
-    };
   };
 
   odin-github = { rev, version, hash, llvmPackages, }:
@@ -45,9 +41,15 @@ let
       };
     };
 
+  patch-sroa = pkg: pkg.overrideAttrs { patches = [ ./patches/add-removed-passes.patch ]; };
+
   release-pkgs = lib.mapAttrs' (version: attrs:
     lib.nameValuePair "odin-${version}"
     (odin-release { inherit version attrs; })) releases;
+
+  release-pkgs-sroa = lib.mapAttrs' (name: pkg:
+    lib.nameValuePair "${name}-sroa"
+    (patch-sroa pkg)) release-pkgs;
 
   odin-latest = odin-github {
     llvmPackages = prev.llvmPackages_17;
@@ -56,12 +58,7 @@ let
     hash = "sha256-9cweXSjNpXNGbL2DzkJ6jq9WpQA+geOZnT5KPFBsQE8=";
   };
 
-  odin-sroa-pass = odin-github {
-    llvmPackages = prev.llvmPackages_17;
-    version = "sroa-pass";
-    rev = "034aead9301305d41756ef3b5b9b60a88c95d825";
-    hash = "sha256-okfcOlajq+r3oHH9zRHqaND4kIq3LWKYfEK7WTaI8hk=";
-  };
+  odin-latest-sroa = patch-sroa odin-latest;
 
   ols = prev.callPackage ./ols.nix { odin = odin-latest; };
-in { odin-pkgs = release-pkgs // { inherit odin-sroa-pass odin-latest ols; }; }
+in { odin-pkgs = release-pkgs // release-pkgs-sroa // { inherit odin-latest odin-latest-sroa ols; }; }

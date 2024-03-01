@@ -1,0 +1,223 @@
+diff --git a/src/llvm_backend.cpp b/src/llvm_backend.cpp
+index efba19f..2d1ac43 100644
+--- a/src/llvm_backend.cpp
++++ b/src/llvm_backend.cpp
+@@ -1476,16 +1476,18 @@ gb_internal WORKER_TASK_PROC(lb_llvm_module_pass_worker_proc) {
+ 		break;
+ 	case 1:
+ // default<Os>
+-// Passes removed: coro, openmp, sroa
+ 		array_add(&passes, u8R"(
+ annotation2metadata,
+ forceattrs,
+ inferattrs,
++coro-early,
+ function<eager-inv>(
+ 	lower-expect,
+ 	simplifycfg<bonus-inst-threshold=1;no-forward-switch-cond;no-switch-range-to-icmp;no-switch-to-lookup;keep-loops;no-hoist-common-insts;no-sink-common-insts;speculate-blocks;simplify-cond-branch>,
++	sroa<modify-cfg>,
+ 	early-cse<>
+ ),
++openmp-opt,
+ ipsccp,
+ called-value-propagation,
+ globalopt,
+@@ -1504,6 +1506,7 @@ function<eager-inv>(
+ 		inline,
+ 		function-attrs<skip-non-recursive>,
+ 		function<eager-inv;no-rerun>(
++			sroa<modify-cfg>,
+ 			early-cse<memssa>,
+ 			speculative-execution,
+ 			jump-threading,
+@@ -1531,6 +1534,7 @@ function<eager-inv>(
+ 				loop-deletion,
+ 				loop-unroll-full
+ 			),
++			sroa<modify-cfg>,
+ 			vector-combine,
+ 			mldst-motion<no-split-footer-bb>,
+ 			gvn<>,
+@@ -1546,16 +1550,19 @@ function<eager-inv>(
+ 			loop-mssa(
+ 				licm<allowspeculation>
+ 			),
++			coro-elide,
+ 			simplifycfg<bonus-inst-threshold=1;no-forward-switch-cond;switch-range-to-icmp;no-switch-to-lookup;keep-loops;hoist-common-insts;sink-common-insts;speculate-blocks;simplify-cond-branch>,
+ 			instcombine<max-iterations=1000;no-use-loop-info>
+ 		),
+ 		function-attrs,
+ 		function(
+ 			require<should-not-run-function-passes>
+-		)
++		),
++		coro-split
+ 	)
+ ),
+ deadargelim,
++coro-cleanup,
+ globalopt,
+ globaldce,
+ elim-avail-extern,
+@@ -1579,6 +1586,7 @@ function<eager-inv>(
+ 	instcombine<max-iterations=1000;no-use-loop-info>,
+ 	loop-unroll<O2>,
+ 	transform-warning,
++	sroa<preserve-cfg>,
+ 	instcombine<max-iterations=1000;no-use-loop-info>,
+ 	loop-mssa(
+ 		licm<allowspeculation>
+@@ -1601,17 +1609,19 @@ verify
+ )");
+ 		break;
+ // default<O2>
+-// Passes removed: coro, openmp, sroa
+ 	case 2:
+ 		array_add(&passes, u8R"(
+ annotation2metadata,
+ forceattrs,
+ inferattrs,
++coro-early,
+ function<eager-inv>(
+ 	lower-expect,
+ 	simplifycfg<bonus-inst-threshold=1;no-forward-switch-cond;no-switch-range-to-icmp;no-switch-to-lookup;keep-loops;no-hoist-common-insts;no-sink-common-insts;speculate-blocks;simplify-cond-branch>,
++	sroa<modify-cfg>,
+ 	early-cse<>
+ ),
++openmp-opt,
+ ipsccp,
+ called-value-propagation,
+ globalopt,
+@@ -1630,7 +1640,9 @@ cgscc(
+ 		inline<only-mandatory>,
+ 		inline,
+ 		function-attrs<skip-non-recursive>,
++		openmp-opt-cgscc,
+ 		function<eager-inv;no-rerun>(
++			sroa<modify-cfg>,
+ 			early-cse<memssa>,
+ 			speculative-execution,
+ 			jump-threading,
+@@ -1659,6 +1671,7 @@ cgscc(
+ 				loop-deletion,
+ 				loop-unroll-full
+ 			),
++			sroa<modify-cfg>,
+ 			vector-combine,
+ 			mldst-motion<no-split-footer-bb>,
+ 			gvn<>,
+@@ -1674,16 +1687,19 @@ cgscc(
+ 			loop-mssa(
+ 				licm<allowspeculation>
+ 			),
++			coro-elide,
+ 			simplifycfg<bonus-inst-threshold=1;no-forward-switch-cond;switch-range-to-icmp;no-switch-to-lookup;keep-loops;hoist-common-insts;sink-common-insts;speculate-blocks;simplify-cond-branch>,
+ 			instcombine<max-iterations=1000;no-use-loop-info>
+ 		),
+ 		function-attrs,
+ 		function(
+ 			require<should-not-run-function-passes>
+-		)
++		),
++		coro-split
+ 	)
+ ),
+ deadargelim,
++coro-cleanup,
+ globalopt,
+ globaldce,
+ elim-avail-extern,
+@@ -1691,22 +1707,21 @@ rpo-function-attrs,
+ recompute-globalsaa,
+ function<eager-inv>(
+ 	float2int,
+-	lower-constant-intrinsics,
+-	loop(
++	lower-constant-intrinsics,loop(
+ 		loop-rotate<header-duplication;no-prepare-for-lto>,
+ 		loop-deletion
+ 	),
+ 	loop-distribute,
+ 	inject-tli-mappings,
+ 	loop-vectorize<no-interleave-forced-only;no-vectorize-forced-only;>,
+-	loop-load-elim,
+-	instcombine<max-iterations=1000;no-use-loop-info>,
++	loop-load-elim,instcombine<max-iterations=1000;no-use-loop-info>,
+ 	simplifycfg<bonus-inst-threshold=1;forward-switch-cond;switch-range-to-icmp;switch-to-lookup;no-keep-loops;hoist-common-insts;sink-common-insts;speculate-blocks;simplify-cond-branch>,
+ 	slp-vectorizer,
+ 	vector-combine,
+ 	instcombine<max-iterations=1000;no-use-loop-info>,
+ 	loop-unroll<O2>,
+ 	transform-warning,
++	sroa<preserve-cfg>,
+ 	instcombine<max-iterations=1000;no-use-loop-info>,
+ 	loop-mssa(
+ 		licm<allowspeculation>
+@@ -1731,17 +1746,19 @@ verify
+ 
+ 	case 3:
+ // default<O3>
+-// Passes removed: coro, openmp, sroa
+ 		array_add(&passes, u8R"(
+ annotation2metadata,
+ forceattrs,
+ inferattrs,
++coro-early,
+ function<eager-inv>(
+ 	lower-expect,
+ 	simplifycfg<bonus-inst-threshold=1;no-forward-switch-cond;no-switch-range-to-icmp;no-switch-to-lookup;keep-loops;no-hoist-common-insts;no-sink-common-insts;speculate-blocks;simplify-cond-branch>,
++	sroa<modify-cfg>,
+ 	early-cse<>,
+ 	callsite-splitting
+ ),
++openmp-opt,
+ ipsccp,
+ called-value-propagation,
+ globalopt,
+@@ -1761,7 +1778,9 @@ cgscc(
+ 		inline,
+ 		function-attrs<skip-non-recursive>,
+ 		argpromotion,
++		openmp-opt-cgscc,
+ 		function<eager-inv;no-rerun>(
++			sroa<modify-cfg>,
+ 			early-cse<memssa>,
+ 			speculative-execution,
+ 			jump-threading,
+@@ -1790,6 +1809,7 @@ cgscc(
+ 				loop-deletion,
+ 				loop-unroll-full
+ 			),
++			sroa<modify-cfg>,
+ 			vector-combine,
+ 			mldst-motion<no-split-footer-bb>,
+ 			gvn<>,
+@@ -1805,16 +1825,19 @@ cgscc(
+ 			loop-mssa(
+ 				licm<allowspeculation>
+ 			),
++			coro-elide,
+ 			simplifycfg<bonus-inst-threshold=1;no-forward-switch-cond;switch-range-to-icmp;no-switch-to-lookup;keep-loops;hoist-common-insts;sink-common-insts;speculate-blocks;simplify-cond-branch>,
+ 			instcombine<max-iterations=1000;no-use-loop-info>
+ 		),
+ 		function-attrs,
+ 		function(
+ 			require<should-not-run-function-passes>
+-		)
++		),
++		coro-split
+ 	)
+ ),
+ deadargelim,
++coro-cleanup,
+ globalopt,
+ globaldce,
+ elim-avail-extern,
+@@ -1839,6 +1862,7 @@ function<eager-inv>(
+ 	instcombine<max-iterations=1000;no-use-loop-info>,
+ 	loop-unroll<O3>,
+ 	transform-warning,
++	sroa<preserve-cfg>,
+ 	instcombine<max-iterations=1000;no-use-loop-info>,
+ 	loop-mssa(
+ 		licm<allowspeculation>

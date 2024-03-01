@@ -10,7 +10,7 @@ in stdenv.mkDerivation {
 
   LLVM_CONFIG = "${llvmPackages.llvm.dev}/bin/llvm-config";
 
-  patchPhase = ''
+  postPatch = ''
     sed -i build_odin.sh \
       -e 's/^GIT_SHA=.*$/GIT_SHA=/' \
       -e 's/LLVM-C/LLVM/' \
