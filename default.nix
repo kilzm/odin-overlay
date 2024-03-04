@@ -13,6 +13,10 @@ let
     };
 
   releases = {
+    dev-2024-03 = {
+      hash = "sha256-oK5OcWAZy9NVH19oep6QU4d5qaiO0p+d9FvxDIrzFLU=";
+      llvmPackages = prev.llvmPackages_17;
+    };
     dev-2024-02 = {
       hash = "sha256-v9A0+kgREXALhnvFYWtE0+H4L7CYnyje+d2W5+/ZvHA=";
       llvmPackages = prev.llvmPackages_17;
@@ -54,8 +58,8 @@ let
   odin-latest = odin-github {
     llvmPackages = prev.llvmPackages_17;
     version = "latest";
-    rev = "master";
-    hash = "sha256-9cweXSjNpXNGbL2DzkJ6jq9WpQA+geOZnT5KPFBsQE8=";
+    rev = "7ae22b7ce507dca47c3da7aa6d750a8fb557e1ad";
+    hash = "sha256-XXpVJvYfFh4bAnaziiWa85srLeswymC01Za/Bw/Qfyk=";
   };
 
   odin-latest-sroa = patch-sroa odin-latest;
