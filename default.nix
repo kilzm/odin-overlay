@@ -13,6 +13,14 @@ let
     };
 
   releases = {
+    dev-2024-04a = {
+      hash = "sha256-jFENpWUosNNTctYiHdKqDg7ENAoEtigz87pTfYJDj5Q=";
+      llvmPackages = prev.llvmPackages_17;
+    };
+    dev-2024-04 = {
+      hash = "sha256-nPf3ARUUiHSKpKh+jDm78eM/9c7fbAl0xsjb8iotsgI=";
+      llvmPackages = prev.llvmPackages_17;
+    };
     dev-2024-03 = {
       hash = "sha256-oK5OcWAZy9NVH19oep6QU4d5qaiO0p+d9FvxDIrzFLU=";
       llvmPackages = prev.llvmPackages_17;
@@ -45,7 +53,7 @@ let
       };
     };
 
-  patch-sroa = pkg: pkg.overrideAttrs { patches = [ ./patches/add-removed-passes.patch ]; };
+  patch-sroa = pkg: pkg.overrideAttrs (old: { patches = (old.patches or []) ++ [ ./patches/add-removed-passes.patch ]; });
 
   release-pkgs = lib.mapAttrs' (version: attrs:
     lib.nameValuePair "odin-${version}"
@@ -58,11 +66,11 @@ let
   odin-latest = odin-github {
     llvmPackages = prev.llvmPackages_17;
     version = "latest";
-    rev = "7ae22b7ce507dca47c3da7aa6d750a8fb557e1ad";
-    hash = "sha256-XXpVJvYfFh4bAnaziiWa85srLeswymC01Za/Bw/Qfyk=";
+    rev = "17a01a81d812793ee494d46885e6316c7cdd447e";
+    hash = "sha256-My7B1D5jvur9ot8xo/Z3G9lGQU1uZw22/H7AQ2Y+p8E=";
   };
 
   odin-latest-sroa = patch-sroa odin-latest;
 
-  ols = prev.callPackage ./ols.nix { odin = odin-latest; };
+  ols = prev.callPackage ./ols.nix { odin = release-pkgs.odin-dev-2024-04a; };
 in { odin-pkgs = release-pkgs // release-pkgs-sroa // { inherit odin-latest odin-latest-sroa ols; }; }
