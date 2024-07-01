@@ -13,6 +13,10 @@ let
     };
 
   releases-llvm18 = let llvmPackages = prev.llvmPackages_18; in {
+    dev-2024-07 = {
+      hash = "sha256-FeiVTLwgP0x1EZqqiYkGbKALhZWC4xE6a/3PPcEElAc=";
+      inherit llvmPackages;
+    };
     dev-2024-06 = {
       hash = "sha256-Ba+244L855y+XzLcaf1fgQhHVDv2Q77GPapRAYmCQfg=";
       inherit llvmPackages;
@@ -69,5 +73,5 @@ let
     lib.nameValuePair "odin-${version}"
     (odin-release { inherit version attrs; })) releases-llvm18;
 
-  ols = prev.callPackage ./ols.nix { odin = release-pkgs-llvm18.odin-dev-2024-06; };
+  ols = prev.callPackage ./ols.nix { odin = release-pkgs-llvm18.odin-dev-2024-07; };
 in { odin-pkgs = release-pkgs-llvm17 // release-pkgs-sroa-llvm17 // release-pkgs-llvm18 // { inherit ols; }; }
