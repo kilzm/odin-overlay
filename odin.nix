@@ -24,6 +24,8 @@ in stdenv.mkDerivation {
 
   postBuild = ''
     make -C vendor/stb/src
+    make -C vendor/cgltf/src
+    make -C vendor/miniaudio/src
   '';
 
   installPhase = ''
