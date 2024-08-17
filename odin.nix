@@ -22,6 +22,10 @@ in stdenv.mkDerivation {
 
   buildFlags = [ "release" ];
 
+  postBuild = ''
+    make -C vendor/stb/src
+  '';
+
   installPhase = ''
     runHook preInstall
 
