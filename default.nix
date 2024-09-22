@@ -13,6 +13,10 @@ let
     };
 
   releases-llvm18 = let llvmPackages = prev.llvmPackages_18; in {
+    dev-2024-09 = {
+      hash = "sha256-rbKaGj4jwR+SySt+XJ7K9rtpQsL60IKJ55/1uNkVE1U=";
+      inherit llvmPackages;
+    };
     dev-2024-08 = {
       hash = "sha256-aoyi0ah5Jp2FDHT+VVQi8Mnz4cmLVuxS+lWZeQ0ilQY=";
       inherit llvmPackages;
@@ -77,5 +81,16 @@ let
     lib.nameValuePair "odin-${version}"
     (odin-release { inherit version attrs; })) releases-llvm18;
 
-  ols = prev.callPackage ./ols.nix { odin = release-pkgs-llvm18.odin-dev-2024-08; };
-in { odin-pkgs = release-pkgs-llvm17 // release-pkgs-sroa-llvm17 // release-pkgs-llvm18 // { inherit ols; }; }
+  odin-latest = prev.callPackage ./odin.nix {
+    version = "latest";
+    src = prev.fetchFromGitHub {
+      owner = "odin-lang";
+      repo = "Odin";
+      rev = "c1264c2a798b94561dd7dbfa627c5d1555258442";
+      hash = "sha256-RNSFbdifRkokv1JIjABWfGEXtb3kSg1Ps2Pv68YzyDA=";
+    };
+    llvmPackages = prev.llvmPackages_18;
+  };
+
+  ols = prev.callPackage ./ols.nix { odin = odin-latest; };
+in { odin-pkgs = release-pkgs-llvm17 // release-pkgs-sroa-llvm17 // release-pkgs-llvm18 // { inherit ols odin-latest; }; }
