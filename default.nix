@@ -90,6 +90,7 @@ let
       hash = "sha256-RNSFbdifRkokv1JIjABWfGEXtb3kSg1Ps2Pv68YzyDA=";
     };
     llvmPackages = prev.llvmPackages_18;
+    pkgs = prev.pkgs
   };
 
   ols = prev.callPackage ./ols.nix { odin = odin-latest; };
