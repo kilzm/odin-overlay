@@ -40,7 +40,7 @@ in stdenv.mkDerivation {
         lib.makeBinPath (with llvmPackages; [ bintools llvm clang lld ])
       } \
       --prefix LD_LIBRARY_PATH : ${
-        lib.makeLibraryPath [ pkgs.xorg.libX11 pkgs.libGL ]
+        lib.makeLibraryPath (with pkgs; [ xorg.libX11 libGL alsa-lib ])
       } \
       --set-default ODIN_ROOT $out/share
 
