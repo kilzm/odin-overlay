@@ -1,4 +1,4 @@
-{ lib, llvmPackages, makeBinaryWrapper, libiconv, which, version, src, }:
+{ lib, llvmPackages, makeBinaryWrapper, libiconv, which, version, src, pkgs}:
 let inherit (llvmPackages) stdenv;
 in stdenv.mkDerivation {
   pname = "odin";
@@ -39,6 +39,9 @@ in stdenv.mkDerivation {
       --prefix PATH : ${
         lib.makeBinPath (with llvmPackages; [ bintools llvm clang lld ])
       } \
+      --prefix LD_LIBRARY_PATH : $ {
+          lib.makeLibraryPath (with pkgs; [ xorg.libX11 libGL])
+        } \ 
       --set-default ODIN_ROOT $out/share
 
     runHook postInstall
