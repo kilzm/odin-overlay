@@ -39,6 +39,9 @@ in stdenv.mkDerivation {
       --prefix PATH : ${
         lib.makeBinPath (with llvmPackages; [ bintools llvm clang lld ])
       } \
+      --prefix LD_LIBRARY_PATH : ${
+        lib.makeLibraryPath [ pkgs.xorg.libX11 pkgs.libGL ]
+      } \
       --set-default ODIN_ROOT $out/share
 
     runHook postInstall
