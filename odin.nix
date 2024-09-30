@@ -1,4 +1,4 @@
-{ lib, llvmPackages, makeBinaryWrapper, libiconv, which, version, src, }:
+{ lib, llvmPackages, makeBinaryWrapper, libiconv, which, version, src, pkgs}:
 let inherit (llvmPackages) stdenv;
 in stdenv.mkDerivation {
   pname = "odin";
@@ -38,6 +38,9 @@ in stdenv.mkDerivation {
     wrapProgram $out/bin/odin \
       --prefix PATH : ${
         lib.makeBinPath (with llvmPackages; [ bintools llvm clang lld ])
+      } \
+      --prefix LD_LIBRARY_PATH : ${
+        lib.makeLibraryPath (with pkgs; [ libGL alsa-lib xorg.libX11 xorg.libXrandr xorg.libXi xorg.libXcursor xorg.libXinerama])
       } \
       --set-default ODIN_ROOT $out/share
 
